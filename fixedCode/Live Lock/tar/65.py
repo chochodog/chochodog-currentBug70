@@ -49,11 +49,6 @@ class Stats:
 
 
 def polite_backoff(who: str) -> None:
-    """
-    FIXED:
-    - 항상 난수(jitter)를 사용해 두 쓰레드가 같은 패턴으로 재시도하지 않도록 함.
-    - 서비스별로 약간 다른 대기 범위를 사용해서 대칭성을 더 깨뜨림.
-    """
     base = BACKOFF_SECONDS
     if LIVEL0CK_MODE:
 
@@ -67,13 +62,6 @@ def polite_backoff(who: str) -> None:
 
 
 def registrar_service_update_grade(stop_event: threading.Event, stats: Stats):
-    """
-    RegistrarService updates GPA.
-    Lock order: record_lock -> audit_lock (논리 순서 유지)
-    FIX:
-    - 두 번째 lock(audit_lock) 획득 실패 시, record_lock 을 먼저 RELEASE 한 뒤에 backoff.
-    - backoff 는 난수(jitter)를 사용.
-    """
     while not stop_event.is_set():
         stats.inc("attempts", "registrar")
 
@@ -113,13 +101,6 @@ def registrar_service_update_grade(stop_event: threading.Event, stats: Stats):
 
 
 def advisor_service_update_contact(stop_event: threading.Event, stats: Stats):
-    """
-    AdvisorService updates address/contact info.
-    Lock order: audit_lock -> record_lock (반대 순서 유지)
-    FIX:
-    - 두 번째 lock(record_lock) 획득 실패 시, audit_lock 을 먼저 RELEASE 한 뒤에 backoff.
-    - backoff 는 난수(jitter)를 사용하고 registrar 와 시간 분포가 다르게 구성.
-    """
     while not stop_event.is_set():
         stats.inc("attempts", "advisor")
 
@@ -158,10 +139,6 @@ def advisor_service_update_contact(stop_event: threading.Event, stats: Stats):
 
 
 def monitor(stop_event: threading.Event, stats: Stats):
-    """
-    모니터 스레드: 시도/성공/실패 카운트와 마지막 커밋 이후 경과 시간을 출력.
-    라이브락 패턴이 계속되면 경고를 띄움.
-    """
     last = stats.snapshot()
 
     while not stop_event.is_set():

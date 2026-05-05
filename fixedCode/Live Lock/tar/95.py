@@ -139,14 +139,6 @@ class ChatUpdateManager:
         symmetry_breaker: bool = False,
         max_polite_backoffs: int = 5,
     ) -> bool:
-        """
-        FIXED VERSION
-
-        변경 포인트 (위의 C++/Java 예제와 동일한 아이디어):
-        1) 예의(backoff)를 무한히 하지 않도록, 호출당 polite backoff 횟수를 상한(max_polite_backoffs)으로 제한.
-        2) LivelockDetector 가 livelock 을 감지하면, 더 이상 예의를 지키지 않고
-           'forced-progress mode' 로 들어가서 반드시 한 번은 업데이트를 수행.
-        """
         self.log_event(f"[INFO] {actor} wants to update content -> '{new_content}'")
 
         s = self._stats(actor)
